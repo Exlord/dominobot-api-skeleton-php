@@ -32,6 +32,7 @@ Logger::registerErrorHandler($logger);
 // Log exceptions
 Logger::registerExceptionHandler($logger);
 
+require_once 'config.php';
 require_once 'functions.php';
 require_once 'util.php';
 require_once 'dominobot.class.php';

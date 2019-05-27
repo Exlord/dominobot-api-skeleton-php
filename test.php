@@ -18,7 +18,7 @@ $data = \Dominobot\Helper::GetPostParams();
 $keyboard = new Keyboard(true);
 $message  = new Message();
 
-$keyboard->addRow()->addButton('I am a inline Button', 'https://dominobot.ir',true);
+$keyboard->addRow()->addButton('I am a inline Button', 'https://dominobot.ir', trueá);
 $message->setText('Hello Bot!');
 $message->setKeyboard($keyboard);
 

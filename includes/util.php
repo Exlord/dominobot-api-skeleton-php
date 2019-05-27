@@ -44,6 +44,36 @@ class Util {
     ]);
   }
 
+  /**
+   * @param $name
+   * @return mixed|null
+   */
+  public function getCacheItem($name) {
+    if (CACHE_ENABLED)
+      return $this->cache->getItem($name);
+
+    return null;
+  }
+
+  /**
+   * @param $name
+   * @return bool
+   */
+  public function hasCacheItem($name) {
+    return (CACHE_ENABLED && $this->cache->hasItem($name));
+  }
+
+  /**
+   * @param $name
+   * @param $value
+   * @return $this
+   */
+  public function setCacheItem($name, $value) {
+    if (CACHE_ENABLED)
+      $this->cache->setItem($name, $value);
+
+    return $this;
+  }
 }
 
 

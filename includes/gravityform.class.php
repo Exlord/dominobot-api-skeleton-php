@@ -40,8 +40,8 @@ class GravityForm {
       return $this->form;
 
     $cacheName = 'form';
-    if ($this->util->cache->hasItem($cacheName))
-      return $this->util->cache->getItem($cacheName);
+    if ($this->util->hasCacheItem($cacheName))
+      return $this->util->getCacheItem($cacheName);
 
     $request = new Request();
     $request->setMethod(Request::METHOD_GET);
@@ -60,7 +60,7 @@ class GravityForm {
     $response   = $client->send($request);
     $this->form = json_decode($response->getBody(), true);
     if (DEV_ENV)
-      $this->util->cache->setItem($cacheName, $this->form);
+      $this->util->setCacheItem($cacheName, $this->form);
 
     return $this->form;
   }
@@ -70,14 +70,14 @@ class GravityForm {
       return $this->fields;
 
     $cacheName = 'fields';
-    if ($this->util->cache->hasItem($cacheName))
-      return $this->util->cache->getItem($cacheName);
+    if ($this->util->hasCacheItem($cacheName))
+      return $this->util->getCacheItem($cacheName);
 
     $form         = $this->getForm();
     $this->fields = $form['fields'];
 
     if (DEV_ENV)
-      $this->util->cache->setItem($cacheName, $this->fields);
+      $this->util->setCacheItem($cacheName, $this->fields);
 
     return $this->fields;
   }
@@ -87,8 +87,8 @@ class GravityForm {
       return $this->fieldsById;
 
     $cacheName = 'fieldsById';
-    if ($this->util->cache->hasItem($cacheName))
-      return $this->util->cache->getItem($cacheName);
+    if ($this->util->hasCacheItem($cacheName))
+      return $this->util->getCacheItem($cacheName);
 
     $fields = $this->getFields();
 
@@ -97,7 +97,7 @@ class GravityForm {
     }
 
     if (DEV_ENV)
-      $this->util->cache->setItem($cacheName, $this->fieldsById);
+      $this->util->setCacheItem($cacheName, $this->fieldsById);
 
     return $this->fieldsById;
   }
@@ -112,17 +112,14 @@ class GravityForm {
       "User-Agent"    => "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:67.0) Gecko/20100101 Firefox/67.0",
     ]);
     $data = json_encode($this->values);
-    file_put_contents('sample_data/form-submit.json', $data);
     $request->setContent($data);
 
     $client = new Client();
     $client->setOptions([
       'timeout' => 10000,
     ]);
-    $response = $client->send($request);
-    $response = $response->getBody();
-    if (DEV_ENV)
-      file_put_contents('sample_data/submit.json', $response);
+    $response          = $client->send($request);
+    $response          = $response->getBody();
     $this->rawResponse = $response;
     $response          = json_decode($response, true);
 
@@ -192,7 +189,7 @@ class GravityForm {
   }
 
   private function _rule($fieldValue, $operator, $value) {
-    $left = strtolower($fieldValue);
+    $left  = strtolower($fieldValue);
     $right = strtolower($value);
     switch ($operator) {
       case 'is':
