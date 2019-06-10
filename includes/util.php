@@ -52,8 +52,6 @@ class Util {
     ]);
     $resolver->attach($map);
   }
-
-
 }
 
 
