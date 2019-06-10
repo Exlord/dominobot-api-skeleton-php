@@ -3,6 +3,7 @@
         "zendframework/zend-http": "^2.10",
         "zendframework/zend-cache": "^2.8",
         "zendframework/zend-serializer": "^2.9",
-        "zendframework/zend-log": "^2.10"
+        "zendframework/zend-log": "^2.10",
+        "zendframework/zend-view": "^2.11"
     }
 }
