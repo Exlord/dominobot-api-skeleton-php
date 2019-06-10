@@ -5,6 +5,6 @@ I created this project to make it easier for my customers to start working with 
 
 `composer install` to install dependencies.
 
-Check `test.php` for sample usage.
+Check `sample` files for sample usage.
 
 Api documentation is available [here](https://dominobot.ir/api) 
