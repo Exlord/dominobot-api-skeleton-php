@@ -12,8 +12,9 @@ use Dominobot\Response;
 
 require_once 'includes/bootstrap.php';
 
-$util = Util::GetInstance();
-$data = \Dominobot\Helper::GetPostParams();
+$util   = Util::GetInstance();
+$data   = \Dominobot\Helper::GetPostParams();
+$fields = $data['data']['fields'];
 
 $keyboard = new Keyboard(true);
 $message  = new Message();
