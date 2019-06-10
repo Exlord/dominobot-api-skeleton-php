@@ -32,6 +32,12 @@ class KeyboardRow extends \ArrayObject implements \JsonSerializable {
 }
 
 class InlineKeyboardRow extends \ArrayObject implements \JsonSerializable {
+  /**
+   * @param $text
+   * @param $value
+   * @param bool $isUrl
+   * @return $this
+   */
   public function addButton($text, $value, $isUrl = false) {
     $item     = ['text' => $text,];
     $n        = $isUrl ? 'url' : 'callback_data';
@@ -112,10 +118,24 @@ class Message implements \JsonSerializable {
   }
 }
 
-class Response implements \JsonSerializable {
-  private $userId   = null;
-  private $messages = [];
-  private $command  = null;
+class AbstractResponse implements \JsonSerializable {
+  public function jsonSerialize() {
+    return get_object_vars($this);
+  }
+
+  public function send() {
+    $response = json_encode($this);
+    header('Content-type: application/json');
+    if (DEV_ENV)
+      file_put_contents('sample_data/response.json', $response);
+    print $response;
+  }
+}
+
+class Response extends AbstractResponse {
+  public $userId   = null;
+  public $messages = [];
+  public $command  = null;
 
   public function __construct($userId = null) {
     $this->userId = $userId;
@@ -143,17 +163,23 @@ class Response implements \JsonSerializable {
     $this->command = $com;
     return $this;
   }
+}
 
-  public function jsonSerialize() {
-    return get_object_vars($this);
-  }
+class ValidationResponse extends AbstractResponse{
+  /**
+   * @var bool
+   */
+  public $status  = true;
+  public $message = null;
 
-  public function send() {
-    $response = json_encode($this);
-    header('Content-type: application/json');
-    if (DEV_ENV)
-      file_put_contents('sample_data/response.json', $response);
-    print $response;
+  /**
+   * ValidationResponse constructor.
+   * @param bool $status
+   * @param null $message
+   */
+  public function __construct($status, $message = null) {
+    $this->status  = $status;
+    $this->message = $message;
   }
 }
 
@@ -162,7 +188,7 @@ class Helper {
     $input = file_get_contents('php://input');
     if (DEV_ENV)
       file_put_contents(ROOT . '/sample_data/data.json', $input);
-    if (!$input || !strlen($input) && DEV_ENV) {
+    if ((!$input || !strlen($input)) && DEV_ENV) {
       file_put_contents('sample_data/server.php', var_export($_SERVER, true));
     }
     return json_decode($input, true);
@@ -177,5 +203,20 @@ class Helper {
     }
 
     return $sorted;
+  }
+
+  public static function GetPhoneNumber($fieldValue) {
+    $mobile = $fieldValue;
+    if (is_object($mobile) || is_array($mobile))
+      $mobile = $mobile['phone_number'];
+
+    return $mobile;
+  }
+
+  public static function ClearPreFix($fieldValue, $prefix) {
+    if (!$fieldValue)
+      return $fieldValue;
+
+    return str_replace($prefix, '', urldecode($fieldValue));
   }
 }
