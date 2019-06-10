@@ -4,8 +4,6 @@
  * User: Exlord
  * Date: 5/20/2019
  * Time: 12:31 PM
- *
- * Wordpress Gravity form helper
  */
 
 use Zend\Http\Client;
@@ -40,8 +38,8 @@ class GravityForm {
       return $this->form;
 
     $cacheName = 'form';
-    if ($this->util->hasCacheItem($cacheName))
-      return $this->util->getCacheItem($cacheName);
+    if (CACHE_ENABLED && $this->util->cache->hasItem($cacheName))
+      return $this->util->cache->getItem($cacheName);
 
     $request = new Request();
     $request->setMethod(Request::METHOD_GET);
@@ -59,10 +57,30 @@ class GravityForm {
     ]);
     $response   = $client->send($request);
     $this->form = json_decode($response->getBody(), true);
-    if (DEV_ENV)
-      $this->util->setCacheItem($cacheName, $this->form);
+
+    if (CACHE_ENABLED)
+      $this->util->cache->setItem($cacheName, $this->form);
 
     return $this->form;
+  }
+
+  public function getEntry($entryId) {
+    $request = new Request();
+    $request->setMethod(Request::METHOD_GET);
+    $request->setUri($this->apiEndpoint . 'entries/' . $entryId);
+    $request->getHeaders()->addHeaders([
+      'Authorization' => 'Basic ' . base64_encode($this->consumerKey . ':' . $this->consumerSecret),
+      'Content-Type'  => 'application/json',
+      "User-Agent"    => "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:67.0) Gecko/20100101 Firefox/67.0",
+    ]);
+
+
+    $client = new Client();
+    $client->setOptions([
+      'timeout' => 10000,
+    ]);
+    $response = $client->send($request);
+    return json_decode($response->getBody(), true);
   }
 
   public function getFields() {
@@ -70,14 +88,14 @@ class GravityForm {
       return $this->fields;
 
     $cacheName = 'fields';
-    if ($this->util->hasCacheItem($cacheName))
-      return $this->util->getCacheItem($cacheName);
+    if (CACHE_ENABLED && $this->util->cache->hasItem($cacheName))
+      return $this->util->cache->getItem($cacheName);
 
     $form         = $this->getForm();
     $this->fields = $form['fields'];
 
-    if (DEV_ENV)
-      $this->util->setCacheItem($cacheName, $this->fields);
+    if (CACHE_ENABLED)
+      $this->util->cache->setItem($cacheName, $this->fields);
 
     return $this->fields;
   }
@@ -87,8 +105,8 @@ class GravityForm {
       return $this->fieldsById;
 
     $cacheName = 'fieldsById';
-    if ($this->util->hasCacheItem($cacheName))
-      return $this->util->getCacheItem($cacheName);
+    if (CACHE_ENABLED && $this->util->cache->hasItem($cacheName))
+      return $this->util->cache->getItem($cacheName);
 
     $fields = $this->getFields();
 
@@ -97,7 +115,10 @@ class GravityForm {
     }
 
     if (DEV_ENV)
-      $this->util->setCacheItem($cacheName, $this->fieldsById);
+      file_put_contents('sample_data/fields.json', json_encode($this->fieldsById));
+
+    if (CACHE_ENABLED)
+      $this->util->cache->setItem($cacheName, $this->fieldsById);
 
     return $this->fieldsById;
   }
@@ -112,14 +133,46 @@ class GravityForm {
       "User-Agent"    => "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:67.0) Gecko/20100101 Firefox/67.0",
     ]);
     $data = json_encode($this->values);
+    if (DEV_ENV)
+      file_put_contents('sample_data/form-submit.json', $data);
     $request->setContent($data);
 
     $client = new Client();
     $client->setOptions([
       'timeout' => 10000,
     ]);
-    $response          = $client->send($request);
-    $response          = $response->getBody();
+    $response = $client->send($request);
+    $response = $response->getBody();
+    if (DEV_ENV)
+      file_put_contents('sample_data/submit.json', $response);
+    $this->rawResponse = $response;
+    $response          = json_decode($response, true);
+
+    return $response;
+  }
+
+  public function createEntry($data) {
+    $request = new Request();
+    $request->setMethod(Request::METHOD_POST);
+    $request->setUri($this->apiEndpoint . 'forms/' . $this->formId . '/entries');
+    $request->getHeaders()->addHeaders([
+      'Authorization' => 'Basic ' . base64_encode($this->consumerKey . ':' . $this->consumerSecret),
+      'Content-Type'  => 'application/json',
+      "User-Agent"    => "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:67.0) Gecko/20100101 Firefox/67.0",
+    ]);
+    $data = json_encode($this->values);
+    if (DEV_ENV)
+      file_put_contents('sample_data/form-submit.json', $data);
+    $request->setContent($data);
+
+    $client = new Client();
+    $client->setOptions([
+      'timeout' => 10000,
+    ]);
+    $response = $client->send($request);
+    $response = $response->getBody();
+    if (DEV_ENV)
+      file_put_contents('sample_data/submit.json', $response);
     $this->rawResponse = $response;
     $response          = json_decode($response, true);
 
@@ -218,7 +271,20 @@ class GravityForm {
     return true;
   }
 
+  public function isValid($fieldId, $value, $caseSensitive = false) {
+    $field      = $this->getFieldsById()[$fieldId];
+    $accessCode = @$field['field_access_code_radio'];
+    if ($accessCode) {
+      $accessCode = @$field['field_access_code_' . $accessCode];
+      if ($accessCode) {
+        preg_match('/\b' . $value . '\b/' . ($caseSensitive ? 'i' : ''), $accessCode, $output_array);
+        if (!count($output_array))
+          return false;
+      }
+    }
 
+    return true;
+  }
 }
 
 
