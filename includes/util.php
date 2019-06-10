@@ -10,11 +10,13 @@ use Zend\Cache\PatternFactory;
 use Zend\Cache\StorageFactory;
 use Zend\Http\Client;
 use Zend\Http\Request;
+use Zend\View\Renderer\PhpRenderer;
 
 class Util {
 
   private static $instance = null;
   public         $cache    = null;
+  public         $renderer;
 
   /**
    * @return Util
@@ -28,7 +30,7 @@ class Util {
   }
 
   private function __construct() {
-    $this->cache = StorageFactory::factory([
+    $this->cache    = StorageFactory::factory([
       'adapter' => [
         'name'    => 'filesystem',
         'options' => [
@@ -42,38 +44,16 @@ class Util {
         'Zend\Cache\Storage\Plugin\Serializer' => []
       ],
     ]);
+    $this->renderer = new PhpRenderer();
+    $resolver       = new \Zend\View\Resolver\AggregateResolver();
+    $this->renderer->setResolver($resolver);
+    $map = new \Zend\View\Resolver\TemplateMapResolver([
+      'payment' => ROOT . '/view/payment.phtml',
+    ]);
+    $resolver->attach($map);
   }
 
-  /**
-   * @param $name
-   * @return mixed|null
-   */
-  public function getCacheItem($name) {
-    if (CACHE_ENABLED)
-      return $this->cache->getItem($name);
 
-    return null;
-  }
-
-  /**
-   * @param $name
-   * @return bool
-   */
-  public function hasCacheItem($name) {
-    return (CACHE_ENABLED && $this->cache->hasItem($name));
-  }
-
-  /**
-   * @param $name
-   * @param $value
-   * @return $this
-   */
-  public function setCacheItem($name, $value) {
-    if (CACHE_ENABLED)
-      $this->cache->setItem($name, $value);
-
-    return $this;
-  }
 }
 
 
